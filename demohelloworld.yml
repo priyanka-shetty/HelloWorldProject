@@ -29,8 +29,8 @@ stages:
               containerregistrytype: 'Azure Container Registry'
               azureSubscriptionEndpoint: 'Free Trial(2459ec28-bbdd-4400-94e9-1bf8a5b5d8e3)'
               azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
-              command: 'build'
-              dockerFile: 'D:\a\1\s\HelloWorld\Dockerfile'
+              command: 'Build an image'
+              dockerFile: '*Dockerfile'
               imageName: 'helloworld:$(Build.BuildId)'
 
           - task: Docker@1
