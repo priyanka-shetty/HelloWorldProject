@@ -19,6 +19,7 @@ steps:
           command: 'Build an image'
           dockerFile: 'HelloWorld/Dockerfile'
           imageName: 'helloworld:$(Build.BuildId)'
+
      - task: Docker@1
        displayName: 'Docker Build'
        inputs:
@@ -27,3 +28,13 @@ steps:
          azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
          command: 'Push an image'
          imageName: 'helloworld:$(Build.BuildId)'
+
+     - task: AzureRmWebAppDeployment@4
+       inputs:
+         ConnectionType: 'AzureRM'
+         azureSubscription: 'DemoHelloWorld-SP'
+         appType: 'webAppContainer'
+         WebAppName: 'demohelloworld'
+         DockerNamespace: 'demohelloworldregistry.azurecr.io'
+         DockerRepository: 'helloworld'
+         DockerImageTag: '$(Build.BuildId)'
