@@ -1,0 +1,41 @@
+trigger:
+- main
+
+pool:
+      vmImage : windows-2019
+
+stages:
+- stage: AppTesting
+  jobs:
+  - job: Testing
+    continueOnError: false
+    steps: 
+    - task: NuGetToolInstaller@1
+      inputs:
+        versionSpec: '5.6.0'
+
+    - task: NuGetCommand@2
+      inputs:
+        command: 'restore'
+        restoreSolution: 'HelloWorld/HelloWorld.sln'
+        feedsToUse: 'select'
+
+    - task: VSBuild@1
+      inputs:
+        solution: 'HelloWorld/HelloWorld.sln'
+        clean: true
+
+    - task: VSTest@2
+      inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: |
+          D:\a\1\s\HelloWorldTest\bin\Debug\net5.0\HelloWorldTest.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFormat: 'XUnit'
+        testResultsFiles: 'd:\a\*\*\*trx'
+
