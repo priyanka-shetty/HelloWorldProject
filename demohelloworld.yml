@@ -2,7 +2,7 @@ trigger:
 - main
 
 pool:
-      vmImage : windows-2019
+  vmImage : windows-2019
 
 stages:
 - stage: AppTesting
@@ -11,6 +11,7 @@ stages:
     continueOnError: false
     steps: 
     - task: NuGetToolInstaller@1
+      displayName: Nuget Installation
       inputs:
         versionSpec: '5.6.0'
 
@@ -39,3 +40,34 @@ stages:
         testResultsFormat: 'XUnit'
         testResultsFiles: 'd:\a\*\*\*trx'
 
+- stage: 'AppBuilding'
+  pool:
+    vmImage : windows-2019
+  dependsOn: AppTesting
+  jobs:
+  - deployment: AppTesting
+    displayName: Building the app
+    # creates an environment if it doesn't exist
+    environment: 'AppBuilding'
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: Docker@1
+            displayName: 'Docker Build'
+            inputs:
+              containerregistrytype: 'Azure Container Registry'
+              azureSubscriptionEndpoint: 'Free Trial(2459ec28-bbdd-4400-94e9-1bf8a5b5d8e3)'
+              azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
+              command: 'build'
+              dockerFile: 'HelloWorld/Dockerfile'
+              imageName: 'helloworld:$(Build.BuildId)'
+
+          - task: Docker@1
+            displayName: 'Docker Push'
+            inputs:
+              containerregistrytype: 'Azure Container Registry'
+              azureSubscriptionEndpoint: 'Free Trial(2459ec28-bbdd-4400-94e9-1bf8a5b5d8e3)'
+              azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
+              command: 'Push an image'
+              imageName: 'helloworld:$(Build.BuildId)'
