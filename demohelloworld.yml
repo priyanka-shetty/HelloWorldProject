@@ -29,7 +29,7 @@ stages:
         clean: true
 
     - task: VSTest@2
-      displayName: Runnign the Test Cases
+      displayName: Running the Test Cases
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: |
