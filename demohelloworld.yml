@@ -16,17 +16,20 @@ stages:
         versionSpec: '5.6.0'
 
     - task: NuGetCommand@2
+      displayName: Nuget install for the solutions
       inputs:
         command: 'restore'
         restoreSolution: 'HelloWorld/HelloWorld.sln'
         feedsToUse: 'select'
 
     - task: VSBuild@1
+      displayName: Build the solution
       inputs:
         solution: 'HelloWorld/HelloWorld.sln'
         clean: true
 
     - task: VSTest@2
+      displayName: Runnign the Test Cases
       inputs:
         testSelector: 'testAssemblies'
         testAssemblyVer2: |
@@ -36,6 +39,7 @@ stages:
         searchFolder: '$(System.DefaultWorkingDirectory)'
 
     - task: PublishTestResults@2
+      displayName: Publish the Test Results
       inputs:
         testResultsFormat: 'XUnit'
         testResultsFiles: 'd:\a\*\*\*trx'
@@ -71,3 +75,14 @@ stages:
               azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
               command: 'Push an image'
               imageName: 'helloworld:$(Build.BuildId)'
+
+          - task: AzureRmWebAppDeployment@4
+            displayName: Deploy on WebApp
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'Free Trial(2459ec28-bbdd-4400-94e9-1bf8a5b5d8e3)'
+              appType: 'webAppContainer'
+              WebAppName: 'demohelloworld'
+              DockerNamespace: 'demohelloworldregistry.azurecr.io'
+              DockerRepository: 'helloworld'
+              DockerImageTag: 'latest'
