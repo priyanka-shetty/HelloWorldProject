@@ -5,44 +5,6 @@ pool:
   vmImage : windows-2019
 
 stages:
-- stage: AppTesting
-  jobs:
-  - job: Testing
-    continueOnError: false
-    steps: 
-    - task: NuGetToolInstaller@1
-      displayName: Nuget Installation
-      inputs:
-        versionSpec: '5.6.0'
-
-    - task: NuGetCommand@2
-      displayName: Nuget install for the solutions
-      inputs:
-        command: 'restore'
-        restoreSolution: 'HelloWorld/HelloWorld.sln'
-        feedsToUse: 'select'
-
-    - task: VSBuild@1
-      displayName: Build the solution
-      inputs:
-        solution: 'HelloWorld/HelloWorld.sln'
-        clean: true
-
-    - task: VSTest@2
-      displayName: Runnign the Test Cases
-      inputs:
-        testSelector: 'testAssemblies'
-        testAssemblyVer2: |
-          D:\a\1\s\HelloWorldTest\bin\Debug\net5.0\HelloWorldTest.dll
-          !**\*TestAdapter.dll
-          !**\obj\**
-        searchFolder: '$(System.DefaultWorkingDirectory)'
-
-    - task: PublishTestResults@2
-      displayName: Publish the Test Results
-      inputs:
-        testResultsFormat: 'XUnit'
-        testResultsFiles: 'd:\a\*\*\*trx'
 
 - stage: 'AppBuilding'
   pool:
@@ -64,7 +26,7 @@ stages:
               azureSubscriptionEndpoint: 'Free Trial(2459ec28-bbdd-4400-94e9-1bf8a5b5d8e3)'
               azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
               command: 'build'
-              dockerFile: 'HelloWorld/Dockerfile'
+              dockerFile: 'HelloWorld/HelloWorld/Dockerfile'
               imageName: 'helloworld:$(Build.BuildId)'
 
           - task: Docker@1
