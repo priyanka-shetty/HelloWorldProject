@@ -10,7 +10,7 @@ namespace HelloWorldTest
         public void SuccessCase()
         {
             var helloWorld = new HelloWorldService();
-            Assert.Equal("HelloWorld", helloWorld.GetHelloWorld());          
+            Assert.Equal("HelloWorld1", helloWorld.GetHelloWorld());          
         }
     }
 }
