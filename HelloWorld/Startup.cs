@@ -31,7 +31,7 @@ namespace HelloWorld
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo for Hello World", Version = "v1" });
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "Demo - Hello World", Version = "v1" });
             });
         }
 
