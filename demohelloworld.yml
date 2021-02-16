@@ -2,13 +2,13 @@ trigger:
 - master
 
 pool:
-  vmImage : windows-2019
+  vmImage : ubuntu-18.04
 
 stages:
 
 - stage: 'AppBuilding'
-  pool:
-    vmImage : ubuntu-18.04
+  # pool:
+  #   vmImage : ubuntu-18.04
   #dependsOn: AppTesting
   jobs:
   - deployment: AppTesting
@@ -19,18 +19,15 @@ stages:
       runOnce:
         deploy:
           steps:
-          - task: CmdLine@2
-            inputs:
-              script: 'pwd D:\a\1\s\HelloWorld'
 
           - task: Docker@1
             displayName: 'Docker Build'
             inputs:
               containerregistrytype: 'Azure Container Registry'
-              azureSubscriptionEndpoint: 'Free Trial(2459ec28-bbdd-4400-94e9-1bf8a5b5d8e3)'
+              azureSubscriptionEndpoint: 'DemoHelloWorld-SP'
               azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
               command: 'Build an image'
-              dockerFile: '$(Build.SourcesDirectory)/HelloWorld/Dockerfile'
+              dockerFile: 'HelloWorld/Dockerfile'
               imageName: 'helloworld:$(Build.BuildId)'
 
           - task: Docker@1
