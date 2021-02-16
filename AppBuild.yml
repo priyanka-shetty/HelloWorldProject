@@ -19,3 +19,11 @@ steps:
           command: 'Build an image'
           dockerFile: 'HelloWorld/Dockerfile'
           imageName: 'helloworld:$(Build.BuildId)'
+     - task: Docker@1
+       displayName: 'Docker Build'
+       inputs:
+         containerregistrytype: 'Azure Container Registry'
+         azureSubscriptionEndpoint: 'DemoHelloWorld-SP'
+         azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
+         command: 'Push an image'
+         imageName: 'helloworld:$(Build.BuildId)'
