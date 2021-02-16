@@ -21,7 +21,7 @@ steps:
          imageName: 'helloworld:$(Build.BuildId)'
 
      - task: Docker@1
-       displayName: 'Docker Build'
+       displayName: 'Docker Push'
        inputs:
          containerregistrytype: 'Azure Container Registry'
          azureSubscriptionEndpoint: 'DemoHelloWorld-SP'
