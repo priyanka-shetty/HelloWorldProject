@@ -21,9 +21,8 @@ stages:
           steps:
           - task: CmdLine@2
             inputs:
-              script: |
-                cd HelloWorld
-                ls
+              script: 'pwd D:\a\1\s\HelloWorld'
+
           - task: Docker@1
             displayName: 'Docker Build'
             inputs:
