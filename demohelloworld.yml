@@ -58,6 +58,9 @@ stages:
       runOnce:
         deploy:
           steps:
+          - task: CmdLine@2
+            inputs:
+              script: 'ls'
           - task: Docker@1
             displayName: 'Docker Build'
             inputs:
@@ -65,7 +68,7 @@ stages:
               azureSubscriptionEndpoint: 'Free Trial(2459ec28-bbdd-4400-94e9-1bf8a5b5d8e3)'
               azureContainerRegistry: 'demohelloworldregistry.azurecr.io'
               command: 'build'
-              dockerFile: 'HelloWorld/HelloWorld/Dockerfile'
+              dockerFile: 'HelloWorldProject/HelloWorld/Dockerfile'
               imageName: 'helloworld:$(Build.BuildId)'
 
           - task: Docker@1
