@@ -43,6 +43,21 @@ stages:
         addSpnToEnvironment: true
         useGlobalConfig: true
 
+     - task: AzureRmWebAppDeployment@4
+       inputs:
+         ConnectionType: 'AzureRM'
+         azureSubscription: 'DemoHelloWorld-SP'
+         appType: 'webAppContainer'
+         WebAppName: '$(webApp.name)'
+         deployToSlotOrASE: true
+         ResourceGroupName: '$(webApp.resourceGroup)'
+         SlotName: 'staging-pr-$(System.PullRequest.PullRequestId)'
+         DockerNamespace: '$(container.registry)'
+         DockerRepository: 'helloworld'
+         DockerImageTag: '$(Build.BuildId)'
+         AppSettings: '-DOCKER_REGISTRY_SERVER_PASSWORD $(registrypassword) -DOCKER_REGISTRY_SERVER_URL $(registryurl) -DOCKER_REGISTRY_SERVER_USERNAME $(registryusername) -ASPNETCORE_ENVIRONMENT Development'
+
+
      - task: PowerShell@2
        enabled: true
        displayName: Updating the staging url to PR as a comment
@@ -50,50 +65,23 @@ stages:
        env:
          GITHUB_OATH_TOKEN: $(github.oauthToken)
        inputs:
-          targetType: 'inline'
-          script: |
-              $prNumber = $(System.PullRequest.PullRequestNumber)
-              $prInfoUrl = 'https://api.github.com/repos/priyanka-shetty/HelloWorldProject/pulls/' + $prNumber
-              $response = Invoke-RestMethod -URI $prInfoUrl
-              $commentUrl = $response.issue_url + '/comments'
-              Write-Output "P1 done"
-              $authorizationHeaderValue = "token " +  $env:GITHUB_OATH_TOKEN
-              $message = "Previewing url for PR - https://$(webApp.name)-staging-pr-" + $(System.PullRequest.PullRequestId) + ".azurewebsites.net/swagger/index.html"
-              $body = '{"body":"' + $message + '"}'
-              Invoke-RestMethod -Method 'Post' -Uri $commentUrl -Headers @{"Authorization" = $authorizationHeaderValue} -Body $body
-              Write-Output "Added previewing url as comment to the pull request"
-
-- stage: 'Previewing'
-  pool:
-    vmImage: 'ubuntu-latest'
-  dependsOn: Build
-  jobs:
-  - deployment: Preview
-    displayName: Deploying the app to Staging environement
-    # creates an environment if it doesn't exist
-    environment: 'Previewing'
-    strategy:
-      runOnce:
-        deploy:
-          steps:    
-            - task: AzureRmWebAppDeployment@4
-              inputs:
-                ConnectionType: 'AzureRM'
-                azureSubscription: 'DemoHelloWorld-SP'
-                appType: 'webAppContainer'
-                WebAppName: '$(webApp.name)'
-                deployToSlotOrASE: true
-                ResourceGroupName: '$(webApp.resourceGroup)'
-                SlotName: 'staging-pr-$(System.PullRequest.PullRequestId)'
-                DockerNamespace: '$(container.registry)'
-                DockerRepository: 'helloworld'
-                DockerImageTag: '43921'
-                AppSettings: '-DOCKER_REGISTRY_SERVER_PASSWORD $(registrypassword) -DOCKER_REGISTRY_SERVER_URL $(registryurl) -DOCKER_REGISTRY_SERVER_USERNAME $(registryusername) -ASPNETCORE_ENVIRONMENT Development'
+         targetType: 'inline'
+         script: |
+           $prNumber = $(System.PullRequest.PullRequestNumber)
+           $prInfoUrl = 'https://api.github.com/repos/priyanka-shetty/HelloWorldProject/pulls/' + $prNumber
+           $response = Invoke-RestMethod -URI $prInfoUrl
+           $commentUrl = $response.issue_url + '/comments'
+           Write-Output "P1 done"
+           $authorizationHeaderValue = "token " +  $env:GITHUB_OATH_TOKEN
+           $message = "Previewing url for PR - https://$(webApp.name)-staging-pr-" + $(System.PullRequest.PullRequestId) + ".azurewebsites.net/swagger/index.html"
+           $body = '{"body":"' + $message + '"}'
+           Invoke-RestMethod -Method 'Post' -Uri $commentUrl -Headers @{"Authorization" = $authorizationHeaderValue} -Body $body
+           Write-Output "Added previewing url as a comment to the pull request"
 
 - stage: 'MainDeployment'
   pool:
     vmImage: 'ubuntu-latest'
-  dependsOn: Previewing
+  dependsOn: Build
   jobs:
   - deployment: MainDeployment
     displayName: MainDeployment of the App
