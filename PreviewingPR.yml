@@ -1,0 +1,126 @@
+trigger:
+- none
+
+stages:
+- stage: Build
+
+  pool:
+    vmImage: 'ubuntu-latest'
+
+  jobs:
+  - job: Build
+    continueOnError: false
+    steps:
+     - task: Docker@1
+       enabled: true
+       displayName: 'Building the Docker Image'
+       inputs:
+         containerregistrytype: 'Azure Container Registry'
+         azureSubscriptionEndpoint: 'DemoHelloWorld-SP'
+         azureContainerRegistry: '$(container.registry)'
+         command: 'Build an image'
+         dockerFile: 'HelloWorld/Dockerfile'
+         imageName: 'helloworld:$(Build.BuildId)'
+
+     - task: Docker@1
+       enabled: true
+       displayName: 'Publishing the Docker Image'
+       inputs:
+         containerregistrytype: 'Azure Container Registry'
+         azureSubscriptionEndpoint: 'DemoHelloWorld-SP'
+         azureContainerRegistry: '$(container.registry)'
+         command: 'Push an image'
+         imageName: 'helloworld:$(Build.BuildId)'
+
+     - task: AzureCLI@2
+       enabled: true
+       displayName: Creation of Webapp slot
+       inputs:
+        azureSubscription: 'DemoHelloWorld-SP'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: 'az webapp deployment slot create --name $(webApp.name) --resource-group $(webApp.resourceGroup) --slot staging-pr-$(System.PullRequest.PullRequestId)'
+        addSpnToEnvironment: true
+        useGlobalConfig: true
+
+     - task: PowerShell@2
+       enabled: true
+       displayName: Updating the staging url to PR as a comment
+       condition: and(succeeded(), eq(variables['Build.Reason'], 'PullRequest'))
+       env:
+         GITHUB_OATH_TOKEN: $(github.oauthToken)
+       inputs:
+          targetType: 'inline'
+          script: |
+              $prNumber = $(System.PullRequest.PullRequestNumber)
+              $prInfoUrl = 'https://api.github.com/repos/priyankanshetty/Helloworld/pulls/' + $prNumber
+              $response = Invoke-RestMethod -URI $prInfoUrl
+              $commentUrl = $response.issue_url + '/comments'
+              Write-Output "P1 done"
+              $authorizationHeaderValue = "token " +  $env:GITHUB_OATH_TOKEN
+              $message = "Previewing url for PR - https://$(webApp.name)-staging-pr-" + $(System.PullRequest.PullRequestId) + ".azurewebsites.net/swagger/index.html"
+              $body = '{"body":"' + $message + '"}'
+              Invoke-RestMethod -Method 'Post' -Uri $commentUrl -Headers @{"Authorization" = $authorizationHeaderValue} -Body $body
+              Write-Output "Added previewing url as comment to the pull request"
+
+- stage: 'Previewing'
+  pool:
+    vmImage: 'ubuntu-latest'
+  dependsOn: Build
+  jobs:
+  - deployment: Preview
+    displayName: Deploying the app to Staging environement
+    # creates an environment if it doesn't exist
+    environment: 'Previewing'
+    strategy:
+      runOnce:
+        deploy:
+          steps:    
+            - task: AzureRmWebAppDeployment@4
+              inputs:
+                ConnectionType: 'AzureRM'
+                azureSubscription: 'DemoHelloWorld-SP'
+                appType: 'webAppContainer'
+                WebAppName: 'testingdevopslast'
+                deployToSlotOrASE: true
+                ResourceGroupName: '$(webApp.resourceGroup)'
+                SlotName: 'staging-pr-$(System.PullRequest.PullRequestId)'
+                DockerNamespace: '$(container.registry)'
+                DockerRepository: 'helloworld'
+                DockerImageTag: '43921'
+                AppSettings: '-DOCKER_REGISTRY_SERVER_PASSWORD $(registrypassword) -DOCKER_REGISTRY_SERVER_URL $(registryurl) -DOCKER_REGISTRY_SERVER_USERNAME $(registryusername) -ASPNETCORE_ENVIRONMENT Development'
+
+- stage: 'MainDeployment'
+  pool:
+    vmImage: 'ubuntu-latest'
+  dependsOn: Previewing
+  jobs:
+  - deployment: MainDeployment
+    displayName: MainDeployment of the App
+    environment: 'MainDeployment'
+    strategy:
+      runOnce:
+        deploy:
+          steps:    
+            - task: AzureRmWebAppDeployment@4
+              inputs:
+                ConnectionType: 'AzureRM'
+                azureSubscription: 'DemoHelloWorld-SP'
+                appType: 'webAppContainer'
+                WebAppName: '$(webApp.name)'
+                DockerNamespace: '$(container.registry)'
+                DockerRepository: 'helloworld'
+                DockerImageTag: '$(Build.BuildId)'
+                AppSettings: '-ASPNETCORE_ENVIRONMENT Development'
+
+            - task: AzureCLI@2
+              enabled: true
+              displayName: Deletion of Webapp slot
+              inputs:
+                azureSubscription: 'DemoHelloWorld-SP'
+                scriptType: 'pscore'
+                scriptLocation: 'inlineScript'
+                inlineScript: 'az webapp deployment slot delete --name $(webApp.name) --resource-group $(webApp.resourceGroup) --slot staging-pr-$(System.PullRequest.PullRequestId)'
+                addSpnToEnvironment: true
+                useGlobalConfig: true
+
