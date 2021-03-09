@@ -102,7 +102,7 @@ stages:
                 AppSettings: '-ASPNETCORE_ENVIRONMENT Development'
 
             - task: AzureCLI@2
-              enabled: true
+              enabled: false
               displayName: Deletion of Webapp slot
               inputs:
                 azureSubscription: 'DemoHelloWorld-SP'
