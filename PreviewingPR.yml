@@ -53,7 +53,7 @@ stages:
           targetType: 'inline'
           script: |
               $prNumber = $(System.PullRequest.PullRequestNumber)
-              $prInfoUrl = 'https://api.github.com/repos/priyankanshetty/Helloworld/pulls/' + $prNumber
+              $prInfoUrl = 'https://api.github.com/repos/priyanka-shetty/HelloWorldProject/pulls/' + $prNumber
               $response = Invoke-RestMethod -URI $prInfoUrl
               $commentUrl = $response.issue_url + '/comments'
               Write-Output "P1 done"
