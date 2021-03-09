@@ -81,7 +81,7 @@ stages:
                 ConnectionType: 'AzureRM'
                 azureSubscription: 'DemoHelloWorld-SP'
                 appType: 'webAppContainer'
-                WebAppName: 'testingdevopslast'
+                WebAppName: '$(webApp.name)'
                 deployToSlotOrASE: true
                 ResourceGroupName: '$(webApp.resourceGroup)'
                 SlotName: 'staging-pr-$(System.PullRequest.PullRequestId)'
