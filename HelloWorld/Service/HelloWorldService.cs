@@ -7,7 +7,7 @@ namespace HelloWorld.Service
 {
     public class HelloWorldService
     {
-        public string GetHelloWorld()
+        public string GetHelloWorld(data: string)
         {
             return "HelloWorld,,Vish";
         }
